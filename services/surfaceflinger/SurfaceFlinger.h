@@ -134,6 +134,10 @@ public:
         return *mRenderEngine;
     }
 
+#ifdef SWAP_BUFFERS_WORKAROUND
+    int getNumVisibleRegions();
+#endif
+
 private:
     friend class Client;
     friend class DisplayEventConnection;

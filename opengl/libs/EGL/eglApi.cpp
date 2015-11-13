@@ -460,29 +460,14 @@ EGLSurface eglCreateWindowSurface(  EGLDisplay dpy, EGLConfig config,
         // Whether to use sRGB gamma is not part of the EGLconfig, but is part
         // of our native format. So if sRGB gamma is requested, we have to
         // modify the EGLconfig's format before setting the native window's
-        // format.
-
-        // by default, just pick RGBA_8888
-        EGLint format = HAL_PIXEL_FORMAT_RGBA_8888;
+        // format
         android_dataspace dataSpace = HAL_DATASPACE_UNKNOWN;
-
-        EGLint a = 0;
-        cnx->egl.eglGetConfigAttrib(iDpy, config, EGL_ALPHA_SIZE, &a);
-        if (a > 0) {
-            // alpha-channel requested, there's really only one suitable format
-            format = HAL_PIXEL_FORMAT_RGBA_8888;
-        } else {
-            EGLint r, g, b;
-            r = g = b = 0;
-            cnx->egl.eglGetConfigAttrib(iDpy, config, EGL_RED_SIZE,   &r);
-            cnx->egl.eglGetConfigAttrib(iDpy, config, EGL_GREEN_SIZE, &g);
-            cnx->egl.eglGetConfigAttrib(iDpy, config, EGL_BLUE_SIZE,  &b);
-            EGLint colorDepth = r + g + b;
-            if (colorDepth <= 16) {
-                format = HAL_PIXEL_FORMAT_RGB_565;
-            } else {
-                format = HAL_PIXEL_FORMAT_RGBX_8888;
-            }
+        EGLint format;
+        if (!cnx->egl.eglGetConfigAttrib(iDpy, config, EGL_NATIVE_VISUAL_ID,
+                &format)) {
+            ALOGE("eglGetConfigAttrib(EGL_NATIVE_VISUAL_ID) failed: %#x",
+                    eglGetError());
+            format = 0;
         }
 
         // now select a corresponding sRGB format if needed

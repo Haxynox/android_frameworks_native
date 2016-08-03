@@ -466,6 +466,15 @@ EGLSurface eglCreateWindowSurface(  EGLDisplay dpy, EGLConfig config,
         EGLint format = HAL_PIXEL_FORMAT_RGBA_8888;
         android_dataspace dataSpace = HAL_DATASPACE_UNKNOWN;
 
+#if WORKAROUND_BUG_10194508
+#warning "WORKAROUND_10194508 enabled"
+        if (!cnx->egl.eglGetConfigAttrib(iDpy, config, EGL_NATIVE_VISUAL_ID,
+                &format)) {
+            ALOGE("eglGetConfigAttrib(EGL_NATIVE_VISUAL_ID) failed: %#x",
+                    eglGetError());
+            format = 0;
+        }
+#else
         EGLint a = 0;
         cnx->egl.eglGetConfigAttrib(iDpy, config, EGL_ALPHA_SIZE, &a);
         if (a > 0) {
@@ -503,7 +512,7 @@ EGLSurface eglCreateWindowSurface(  EGLDisplay dpy, EGLConfig config,
                 }
             }
         }
-
+#endif
         if (format != 0) {
             int err = native_window_set_buffers_format(window, format);
             if (err != 0) {
